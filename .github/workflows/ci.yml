@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build solution
+        run: msbuild CounterApp.sln /m /p:Configuration=${{ matrix.configuration }} /p:Platform=x64
+
+      - name: Run unit tests
+        run: .\bin\x64\${{ matrix.configuration }}\CounterTests.exe
+
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: CounterApp-${{ matrix.configuration }}
+          path: bin/x64/${{ matrix.configuration }}/CounterApp.exe
